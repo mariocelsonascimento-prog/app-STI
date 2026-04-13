@@ -3,6 +3,7 @@ const state = {
   page: "accueil",
   query: "",
   missionFilter: "all",
+  globalCalendarMonth: "2026-04-01",
   collaboratorAvailability: {
     Lun: ["matin"],
     Mar: ["matin", "aprem"],
@@ -450,6 +451,8 @@ const searchInput = document.querySelector("#global-search");
 const dialog = document.querySelector("#mission-dialog");
 const missionDetailDialog = document.querySelector("#external-mission-dialog");
 const missionDetailContainer = document.querySelector("#external-mission-detail");
+const globalCalendarDialog = document.querySelector("#global-calendar-dialog");
+const globalCalendarContent = document.querySelector("#global-calendar-content");
 const documentFileInput = document.createElement("input");
 
 let pendingDocumentUpload = null;
@@ -503,6 +506,31 @@ function availabilitySummary(day) {
 
 function byDateTime(a, b) {
   return `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`);
+}
+
+function parseLocalDate(dateValue) {
+  const [year, month, day] = dateValue.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function formatMonthKey(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${year}-${month}-01`;
+}
+
+function addGlobalCalendarMonth(delta) {
+  const current = parseLocalDate(state.globalCalendarMonth);
+  state.globalCalendarMonth = formatMonthKey(new Date(current.getFullYear(), current.getMonth() + delta, 1));
+}
+
+function calendarScopeMissions() {
+  const scopedMissions =
+    state.portal === "externe"
+      ? missions.filter((mission) => mission.collaborator === "Elena Popescu")
+      : missions;
+
+  return [...scopedMissions].sort(byDateTime);
 }
 
 function getMissionDocuments(mission) {
@@ -712,6 +740,7 @@ function renderInternalPlanning() {
           <span class="badge">${filteredMissions.length} missions</span>
           <span class="badge">${filteredMissions.filter((mission) => mission.status === "pending").length} à assigner</span>
           <span class="badge">${filteredMissions.filter((mission) => mission.status === "urgent").length} urgente</span>
+          <button class="secondary-action" data-open-global-calendar type="button">Calendrier global</button>
         </div>
       </div>
       <div class="calendar-scroll-note">Semaine complète 24/7, organisée par jour.</div>
@@ -830,7 +859,10 @@ function renderExternalPlanning() {
           <h2>Planning collaborateur</h2>
           <p>Activez vos créneaux du matin ou de l'après-midi.</p>
         </div>
-        <span class="badge">${availabilitySlotCount()} créneaux disponibles</span>
+        <div class="section-actions">
+          <span class="badge">${availabilitySlotCount()} créneaux disponibles</span>
+          <button class="secondary-action" data-open-global-calendar type="button">Calendrier global</button>
+        </div>
       </div>
       <div class="availability-editor">
         ${availabilityDays
@@ -900,6 +932,86 @@ function renderExternalMissions() {
         ${myMissions.map(externalMissionCard).join("") || emptyState("Aucune mission trouvée.")}
       </div>
     </section>
+  `;
+}
+
+function renderGlobalCalendar() {
+  const monthDate = parseLocalDate(state.globalCalendarMonth);
+  const month = monthDate.getMonth();
+  const year = monthDate.getFullYear();
+  const monthLabel = new Intl.DateTimeFormat("fr-FR", {
+    month: "long",
+    year: "numeric",
+  }).format(monthDate);
+  const monthMissions = calendarScopeMissions().filter((mission) => {
+    const missionDate = parseLocalDate(mission.date);
+    return missionDate.getMonth() === month && missionDate.getFullYear() === year;
+  });
+  const firstWeekOffset = (new Date(year, month, 1).getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const totalCells = Math.ceil((firstWeekOffset + daysInMonth) / 7) * 7;
+  const scopeLabel = state.portal === "interne" ? "Toutes les missions STI" : "Mes missions assignées";
+
+  return `
+    <div class="global-calendar">
+      <div class="global-calendar-header">
+        <div>
+          <p class="eyebrow">Calendrier global</p>
+          <h2>${monthLabel}</h2>
+          <p>${scopeLabel}</p>
+        </div>
+        <div class="calendar-nav">
+          <button class="secondary-action" data-calendar-month="-1" type="button">Mois précédent</button>
+          <button class="secondary-action" data-calendar-month="1" type="button">Mois suivant</button>
+        </div>
+      </div>
+      <div class="filter-strip">
+        <span class="badge">${monthMissions.length} missions sur le mois</span>
+        <span class="badge">${monthMissions.filter((mission) => mission.status === "pending").length} à assigner</span>
+        <span class="badge">${monthMissions.filter((mission) => mission.status === "urgent").length} urgentes</span>
+      </div>
+      <div class="global-calendar-scroll">
+        <div class="global-calendar-grid">
+          ${availabilityDays.map((day) => `<div class="calendar-weekday">${day}</div>`).join("")}
+          ${Array.from({ length: totalCells }, (_, index) => {
+            const dayNumber = index - firstWeekOffset + 1;
+            if (dayNumber < 1 || dayNumber > daysInMonth) {
+              return `<div class="calendar-cell is-muted"></div>`;
+            }
+
+            const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(dayNumber).padStart(2, "0")}`;
+            const dayMissions = monthMissions.filter((mission) => mission.date === dateKey);
+            const visibleMissions = dayMissions.slice(0, 3);
+            const hiddenCount = Math.max(dayMissions.length - visibleMissions.length, 0);
+
+            return `
+              <div class="calendar-cell">
+                <div class="calendar-cell-header">
+                  <strong>${dayNumber}</strong>
+                  ${dayMissions.length ? `<span>${dayMissions.length}</span>` : ""}
+                </div>
+                <div class="calendar-cell-events">
+                  ${
+                    visibleMissions
+                      .map(
+                        (mission) => `
+                          <button class="calendar-event ${mission.status}" data-open-calendar-mission="${mission.id}" type="button">
+                            <span>${mission.time}</span>
+                            <strong>${mission.language}</strong>
+                            <small>${mission.city}</small>
+                          </button>
+                        `,
+                      )
+                      .join("") || `<span class="calendar-empty">Libre</span>`
+                  }
+                  ${hiddenCount ? `<span class="more-missions">+${hiddenCount} autre${hiddenCount > 1 ? "s" : ""}</span>` : ""}
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    </div>
   `;
 }
 
@@ -1205,6 +1317,33 @@ function openMissionDetail(missionId) {
   }
 }
 
+function openGlobalCalendar() {
+  globalCalendarContent.innerHTML = renderGlobalCalendar();
+  bindGlobalCalendarEvents();
+
+  if (!globalCalendarDialog.open) {
+    globalCalendarDialog.showModal();
+  }
+}
+
+function bindGlobalCalendarEvents() {
+  globalCalendarDialog.querySelectorAll("[data-calendar-month]").forEach((button) => {
+    button.addEventListener("click", () => {
+      addGlobalCalendarMonth(Number(button.dataset.calendarMonth));
+      globalCalendarContent.innerHTML = renderGlobalCalendar();
+      bindGlobalCalendarEvents();
+    });
+  });
+
+  globalCalendarDialog.querySelectorAll("[data-open-calendar-mission]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const missionId = button.dataset.openCalendarMission;
+      globalCalendarDialog.close();
+      openMissionDetail(missionId);
+    });
+  });
+}
+
 function bindViewEvents() {
   document.querySelectorAll("[data-go]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -1221,6 +1360,10 @@ function bindViewEvents() {
 
   document.querySelectorAll("[data-new-mission]").forEach((button) => {
     button.addEventListener("click", openMissionDialog);
+  });
+
+  document.querySelectorAll("[data-open-global-calendar]").forEach((button) => {
+    button.addEventListener("click", openGlobalCalendar);
   });
 
   document.querySelectorAll("[data-open-mission-detail]").forEach((card) => {
