@@ -449,6 +449,7 @@ const newMissionButton = document.querySelector("#new-mission-button");
 const notice = document.querySelector("#notice");
 const searchInput = document.querySelector("#global-search");
 const dialog = document.querySelector("#mission-dialog");
+const missionForm = dialog.querySelector("form");
 const missionDetailDialog = document.querySelector("#external-mission-dialog");
 const missionDetailContainer = document.querySelector("#external-mission-detail");
 const globalCalendarDialog = document.querySelector("#global-calendar-dialog");
@@ -1412,6 +1413,7 @@ function bindViewEvents() {
 }
 
 function openMissionDialog() {
+  missionForm.reset();
   const dateField = dialog.querySelector('[name="date"]');
   const timeField = dialog.querySelector('[name="time"]');
   dateField.value = "2026-04-13";
@@ -1453,9 +1455,12 @@ documentFileInput.addEventListener("change", () => {
 });
 
 dialog.addEventListener("close", () => {
-  if (dialog.returnValue !== "confirm") return;
+  if (dialog.returnValue !== "confirm") {
+    missionForm.reset();
+    return;
+  }
 
-  const formData = new FormData(dialog.querySelector("form"));
+  const formData = new FormData(missionForm);
   const day = new Intl.DateTimeFormat("fr-FR", { weekday: "short" })
     .format(new Date(formData.get("date")))
     .replace(".", "");
@@ -1479,7 +1484,7 @@ dialog.addEventListener("close", () => {
   });
   missionDocuments[missionId] = { convocation: false, attestation: false };
 
-  dialog.querySelector("form").reset();
+  missionForm.reset();
   setNotice("Mission ajoutée au planning avec le statut À assigner.");
   navigate("interne", "planning");
   render();

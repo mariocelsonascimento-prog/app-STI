@@ -66,7 +66,7 @@
 
     <dialog class="mission-dialog" id="mission-dialog">
       <form method="dialog">
-        <button class="dialog-close" type="submit" aria-label="Fermer">x</button>
+        <button class="dialog-close" type="submit" formnovalidate aria-label="Fermer">x</button>
         <p class="eyebrow">Nouvelle mission</p>
         <h2>Ajouter une demande au planning</h2>
         <div class="form-grid">
@@ -101,7 +101,7 @@
           </label>
         </div>
         <menu class="dialog-actions">
-          <button class="secondary-action" value="cancel">Annuler</button>
+          <button class="secondary-action" type="submit" value="cancel" formnovalidate>Annuler</button>
           <button class="primary-action" value="confirm">Ajouter au planning</button>
         </menu>
       </form>
