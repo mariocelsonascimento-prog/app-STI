@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>STI Planning</title>
+    <link rel="preconnect" href="https://images.unsplash.com" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Navigation principale">
+        <a class="brand" href="#interne/accueil" aria-label="STI Planning">
+          <span class="brand-mark">STI</span>
+          <span>
+            <strong>Planning</strong>
+            <small>Traduction & Interprétariat</small>
+          </span>
+        </a>
+
+        <div class="portal-switch" aria-label="Choix du portail">
+          <button class="portal-button is-active" type="button" data-portal="interne">
+            Équipe STI
+          </button>
+          <button class="portal-button" type="button" data-portal="externe">
+            Collaborateur
+          </button>
+        </div>
+
+        <nav class="nav-list" aria-label="Pages">
+          <a class="nav-item" href="#interne/accueil" data-nav="interne:accueil">Accueil</a>
+          <a class="nav-item" href="#interne/planning" data-nav="interne:planning">Planning</a>
+          <a class="nav-item" href="#interne/missions" data-nav="interne:missions">Missions</a>
+          <a class="nav-item" href="#interne/collaborateurs" data-nav="interne:collaborateurs">Collaborateurs</a>
+          <a class="nav-item external-only" href="#externe/accueil" data-nav="externe:accueil">Accueil</a>
+          <a class="nav-item external-only" href="#externe/planning" data-nav="externe:planning">Planning</a>
+          <a class="nav-item external-only" href="#externe/missions" data-nav="externe:missions">Missions</a>
+        </nav>
+
+        <div class="support-box">
+          <span class="status-dot"></span>
+          <p>Support opérationnel disponible 24/7</p>
+          <a href="tel:+33185100885">01.85.10.08.85</a>
+        </div>
+      </aside>
+
+      <main class="main-area">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" id="portal-eyebrow">Portail interne</p>
+            <h1 id="page-title">Accueil</h1>
+          </div>
+          <div class="topbar-actions">
+            <label class="search-field">
+              <span>Recherche</span>
+              <input id="global-search" type="search" placeholder="Langue, ville, client..." />
+            </label>
+            <button class="primary-action" id="new-mission-button" type="button">Nouvelle mission</button>
+          </div>
+        </header>
+
+        <section class="notice" id="notice" aria-live="polite" hidden></section>
+        <section class="view" id="app-view" aria-live="polite"></section>
+      </main>
+    </div>
+
+    <dialog class="mission-dialog" id="mission-dialog">
+      <form method="dialog">
+        <button class="dialog-close" type="submit" formnovalidate aria-label="Fermer">x</button>
+        <p class="eyebrow">Nouvelle mission</p>
+        <h2>Ajouter une demande au planning</h2>
+        <div class="form-grid">
+          <label>
+            Client
+            <input name="client" required placeholder="Tribunal, hôpital, association..." />
+          </label>
+          <label>
+            Ville
+            <input name="city" required placeholder="Nanterre" />
+          </label>
+          <label>
+            Date
+            <input name="date" type="date" required />
+          </label>
+          <label>
+            Heure
+            <input name="time" type="time" required />
+          </label>
+          <label>
+            Langue
+            <input name="language" required placeholder="Arabe, LSF, roumain..." />
+          </label>
+          <label>
+            Type
+            <select name="type">
+              <option>Interprétation présentielle</option>
+              <option>Interprétation distancielle</option>
+              <option>Traduction</option>
+              <option>Transcription</option>
+            </select>
+          </label>
+        </div>
+        <menu class="dialog-actions">
+          <button class="secondary-action" type="submit" value="cancel" formnovalidate>Annuler</button>
+          <button class="primary-action" value="confirm">Ajouter au planning</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog class="mission-dialog detail-dialog" id="external-mission-dialog">
+      <form method="dialog">
+        <button class="dialog-close" type="submit" aria-label="Fermer">x</button>
+        <div id="external-mission-detail"></div>
+        <menu class="dialog-actions">
+          <button class="secondary-action" value="cancel">Fermer</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog class="mission-dialog calendar-dialog" id="global-calendar-dialog">
+      <form method="dialog">
+        <button class="dialog-close" type="submit" aria-label="Fermer">x</button>
+        <div id="global-calendar-content"></div>
+        <menu class="dialog-actions">
+          <button class="secondary-action" value="cancel">Fermer</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>
