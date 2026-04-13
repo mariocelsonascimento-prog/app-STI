@@ -789,10 +789,12 @@ function renderCollaborators() {
 }
 
 function renderExternalHome() {
-  const myMissions = missions
-    .filter((mission) => mission.collaborator === "Elena Popescu")
-    .sort(byDateTime);
+  const myMissions = [
+    ...byQuery(missions.filter((mission) => mission.collaborator === "Elena Popescu")),
+  ].sort(byDateTime);
   const nextMission = myMissions[0];
+  const nextMissionValue = nextMission ? nextMission.time : "-";
+  const nextMissionDetail = nextMission ? `${nextMission.day} à ${nextMission.city}` : "Aucun résultat";
 
   return `
     <section class="external-hero">
@@ -802,13 +804,13 @@ function renderExternalHome() {
           <h2>${myMissions.length} créneaux demandent votre attention cette semaine.</h2>
         </div>
         <div class="metric-grid">
-          ${metricCard("Prochaine mission", nextMission.time, `${nextMission.day} à ${nextMission.city}`, "accent-red")}
+          ${metricCard("Prochaine mission", nextMissionValue, nextMissionDetail, "accent-red")}
           ${metricCard("Missions prévues", myMissions.length, "Semaine en cours", "accent-green")}
           ${metricCard("Disponibilités", availabilitySlotCount(), "Créneaux matin/après-midi", "accent-cyan")}
           ${metricCard("Documents", 3, "À transmettre", "accent-yellow")}
         </div>
         <div class="external-list">
-          ${myMissions.map((mission) => timelineItem(mission, "interactive")).join("")}
+          ${myMissions.map((mission) => timelineItem(mission, "interactive")).join("") || emptyState("Aucune mission ne correspond à la recherche.")}
         </div>
       </div>
     </section>
@@ -816,9 +818,9 @@ function renderExternalHome() {
 }
 
 function renderExternalPlanning() {
-  const myMissions = missions
-    .filter((mission) => mission.collaborator === "Elena Popescu")
-    .sort(byDateTime);
+  const myMissions = [
+    ...byQuery(missions.filter((mission) => mission.collaborator === "Elena Popescu")),
+  ].sort(byDateTime);
 
   return `
     <section class="section">
